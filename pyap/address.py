@@ -19,6 +19,9 @@ class Address(object):
     def __init__(self, **args):
         keys = []
         vals = []
+        type_dict = {0:'Full Address',1:'Only Street',2:'No Street'}
+        self.addressType = type_dict[args['Address Type']]
+        args['Address Type'] = self.addressType
         for k, v in six.iteritems(args):
             if v:
                 v = v.strip(' ,;:')

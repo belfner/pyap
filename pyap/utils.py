@@ -44,11 +44,24 @@ elif six.PY3:
 
     def match(regex, string, flags=0):
         '''Utility function for re.match '''
-        return re.match(regex, string, flags=flags)
+        ret = re.match(regex[0], string, flags=flags)
+        if not ret:
+            ret = re.match(regex[1], string, flags=flags)
+            if not ret:
+                ret = re.match(regex[2], string, flags=flags)
+            return ret
+        else:
+            return ret
 
     def findall(regex, string, flags=0):
         '''Utility function for re.findall '''
-        return re.findall(regex, string, flags=flags)
+        ret = [(0,m) for m in re.findall(regex[0], string, flags=flags)]
+        if len(ret) == 0:
+            ret = [(1,m) for m in re.findall(regex[1], string, flags=flags)]
+            ret += [(2,m) for m in re.findall(regex[2], string, flags=flags)]
+            return ret
+        else:
+            return ret
 
     def unicode_str(string):
         '''Return Unicode string'''

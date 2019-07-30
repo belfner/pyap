@@ -14,7 +14,6 @@
     :license: MIT, see LICENSE for more details.
 """
 
-
 '''Numerals from one to nine
 Note: here and below we use syntax like '[Oo][Nn][Ee]'
 instead of '(one)(?i)' to match 'One' or 'oNe' because
@@ -343,6 +342,12 @@ city = r"""
         )
         """
 
+cityalone = r"""
+        (?P<city>
+            [A-Z]{1}[a-zA-Z\ \-\'\.]{2,20}
+        )
+        """
+
 postal_code = r"""
             (?P<postal_code>
                 (?:\d{5}(?:\-\d{4})?)
@@ -372,6 +377,40 @@ full_address = r"""
     full_street=full_street,
     div='[\, ]{,2}',
     city=city,
+    region1=region1,
+    country=country,
+    postal_code=postal_code,
+)
+                    # {city}? {div}?
+                    # {region1}? {div}?
+                    # (?:
+                    #     (?:{postal_code}?\ ?,?{country}?)
+                    # )?
+street = r"""
+                (?P<full_address>
+                    {full_street} {div}
+                )
+                """.format(
+    full_street=full_street,
+    div='[\, ]{,2}',
+    city=city,
+    region1=region1,
+    country=country,
+    postal_code=postal_code,
+)
+# {full_street}? {div}?
+city_state_zip = r"""
+                (?P<full_address>
+                    {city} {div}
+                    {region1} {div}
+                    (?:
+                        (?:{postal_code}?\ ?,?{country}?)
+                    )
+                )
+                """.format(
+    full_street=full_street,
+    div='[\, ]{,2}',
+    city=cityalone,
     region1=region1,
     country=country,
     postal_code=postal_code,

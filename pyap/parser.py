@@ -32,9 +32,9 @@ class AddressParser:
         try:
             # import detection rules
             package = 'pyap' + '.source_' + self.country + \
-                '.data'
+                      '.data'
             data = importlib.import_module(package)
-            self.rules = data.full_address
+            self.rules = [data.full_address, data.street, data.city_state_zip]
 
         except AttributeError:
             raise e.NoCountrySelected(
@@ -44,7 +44,7 @@ class AddressParser:
         except ImportError:
             raise e.CountryDetectionMissing(
                 'Detection rules for country "{country}" not found.'.
-                format(country=self.country), 'Error 2'
+                    format(country=self.country), 'Error 2'
             )
 
     def parse(self, text):
@@ -67,40 +67,41 @@ class AddressParser:
 
     def _parse_address(self, address_string):
         '''Parses address into parts'''
-        match = utils.match(self.rules, address_string, flags=re.VERBOSE | re.U)
+        match = utils.match(self.rules, address_string[1], flags=re.VERBOSE | re.U)
         if match:
             match_as_dict = match.groupdict()
             match_as_dict.update({'country_id': self.country})
             # combine results
             cleaned_dict = self._combine_results(match_as_dict)
+            cleaned_dict['Address Type'] = address_string[0]
             # create object containing results
             return address.Address(**cleaned_dict)
 
         return False
 
     def _combine_results(self, match_as_dict):
-            '''Combine results from different parsed parts:
-            we look for non-empty results in values like
-            'postal_code_b' or 'postal_code_c' and store
-            them as main value.
+        '''Combine results from different parsed parts:
+        we look for non-empty results in values like
+        'postal_code_b' or 'postal_code_c' and store
+        them as main value.
 
-            So 'postal_code_b':'123456'
-                becomes:
-               'postal_code'  :'123456'
-            '''
-            keys = []
-            vals = []
-            for k, v in six.iteritems(match_as_dict):
-                if k[-2:] in '_a_b_c_d_e_f_g_h_i_j_k_l_m':
-                    if v:
-                        # strip last 2 chars: '..._b' -> '...'
-                        keys.append(k[:-2])
-                        vals.append(v)
-                else:
-                    if k not in keys:
-                        keys.append(k)
-                        vals.append(v)
-            return dict(zip(keys, vals))
+        So 'postal_code_b':'123456'
+            becomes:
+           'postal_code'  :'123456'
+        '''
+        keys = []
+        vals = []
+        for k, v in six.iteritems(match_as_dict):
+            if k[-2:] in '_a_b_c_d_e_f_g_h_i_j_k_l_m':
+                if v:
+                    # strip last 2 chars: '..._b' -> '...'
+                    keys.append(k[:-2])
+                    vals.append(v)
+            else:
+                if k not in keys:
+                    keys.append(k)
+                    vals.append(v)
+        return dict(zip(keys, vals))
 
     def _normalize_string(self, text):
         '''Prepares incoming text for parsing:
@@ -135,7 +136,7 @@ class AddressParser:
             text,
             flags=re.VERBOSE | re.U)
 
-        if(matches):
+        if (matches):
             for match in matches:
-                addresses.append(match[0].strip())
+                addresses.append((match[0],match[1][0].strip()))
         return addresses
